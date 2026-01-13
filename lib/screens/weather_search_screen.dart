@@ -1,0 +1,382 @@
+import 'package:flutter/material.dart';
+import '../models/weather_model.dart';
+import '../widgets/glassmorphism_widget.dart';
+import '../widgets/weather_card.dart';
+import '../services/city_service.dart';
+
+
+class WeatherSearchScreen extends StatefulWidget {
+  const WeatherSearchScreen({super.key});
+
+  @override
+  State<WeatherSearchScreen> createState() => _WeatherSearchScreenState();
+}
+
+class _WeatherSearchScreenState extends State<WeatherSearchScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<dynamic> _cities = [];
+  bool _isLoading = false;
+  bool _isAddingWeather = false;
+
+  List<WeatherModel> weatherCards = [
+    WeatherModel(
+      location: 'Lahore, Pakistan',
+      temperature: 20,
+      condition: 'Rainy',
+      highTemp: 20,
+      lowTemp: 4,
+      weatherIcon: 'assets/images/rain2.gif',
+    ),
+    WeatherModel(
+      location: 'Lahore, Pakistan',
+      temperature: 20,
+      condition: 'Sunny',
+      highTemp: 20,
+      lowTemp: 4,
+      weatherIcon: 'assets/images/sun.gif',
+    ),
+    WeatherModel(
+      location: 'Lahore, Pakistan',
+      temperature: 20,
+      condition: 'Thunderstorm',
+      highTemp: 20,
+      lowTemp: 4,
+      weatherIcon: 'assets/images/heavyrain.gif',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF1a1a2e),
+              const Color(0xFF16213e),
+              const Color(0xFF0f3460),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Status Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '9:41',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Icon(Icons.signal_cellular_4_bar, color: Colors.white, size: 18),
+                        const SizedBox(width: 5),
+                        Icon(Icons.wifi, color: Colors.white, size: 18),
+                        const SizedBox(width: 5),
+                        Icon(Icons.battery_full, color: Colors.white, size: 18),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Navigation Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    const Expanded(
+                      child: Text(
+                        'Weather',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline, color: Colors.white),
+                      onPressed: () {},
+                    ),
+                  ],
+                ),
+              ),
+
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Stack(
+                  children: [
+                    GlassmorphismWidget(
+                      borderRadius: BorderRadius.circular(30),
+                      child: TextField(
+                    controller: _searchController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Search for a city',
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                      prefixIcon: Icon(Icons.search, color: Colors.white.withOpacity(0.7)),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                    ),
+                    onChanged: (value) async {
+                      if (value.length > 2) {
+                        setState(() {
+                          _isLoading = true;
+                        });
+                        try {
+                          final cities = await CityService.searchCities(value);
+                          setState(() {
+                            _cities = cities;
+                            _isLoading = false;
+                          });
+                        } catch (e) {
+                          setState(() {
+                            _cities = [];
+                            _isLoading = false;
+                          });
+                        }
+                      } else {
+                        setState(() {
+                          _cities = [];
+                        });
+                      }
+                    },
+                    onSubmitted: (value) async {
+                      if (value.trim().isEmpty) return;
+                      await _addWeatherForCity(value.trim());
+                    },
+                  ),
+                ),
+                    if (_isAddingWeather)
+                      Positioned(
+                        right: 15,
+                        top: 0,
+                        bottom: 0,
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white.withOpacity(0.7),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // City Results List
+              if (_cities.isNotEmpty || _isLoading)
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.black.withOpacity(0.3),
+                  ),
+                  child: _isLoading
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(color: Colors.white),
+                          ),
+                        )
+                      : ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _cities.length,
+                          itemBuilder: (context, index) {
+                            final city = _cities[index];
+                            return ListTile(
+                              title: Text(
+                                '${city['city']}, ${city['country']}',
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              onTap: () async {
+                                final lat = (city['latitude'] as num?)?.toDouble();
+                                final lon = (city['longitude'] as num?)?.toDouble();
+                                
+                                if (lat == null || lon == null) {
+                                  _showErrorSnackBar('إحداثيات المدينة غير متوفرة');
+                                  return;
+                                }
+                                
+                                final cityName = '${city['city']}, ${city['country']}';
+                                _searchController.clear();
+                                setState(() {
+                                  _cities = [];
+                                });
+                                await _addWeatherCard(lat, lon, cityName);
+                              },
+                            );
+                          },
+                        ),
+                ),
+
+              const SizedBox(height: 20),
+
+              // Weather Cards List
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: weatherCards.length,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 15),
+                      child: WeatherCard(weather: weatherCards[index]),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addWeatherForCity(String cityName) async {
+    if (cityName.length < 2) return;
+    
+    setState(() {
+      _isAddingWeather = true;
+    });
+
+    try {
+      // Search for the city
+      final cities = await CityService.searchCities(cityName);
+      if (cities.isEmpty) {
+        setState(() {
+          _isAddingWeather = false;
+        });
+        _showErrorSnackBar('City not found');
+        return;
+      }
+
+      // Take the first result
+      final city = cities[0];
+      final lat = (city['latitude'] as num?)?.toDouble();
+      final lon = (city['longitude'] as num?)?.toDouble();
+      
+      if (lat == null || lon == null) {
+        setState(() {
+          _isAddingWeather = false;
+        });
+        _showErrorSnackBar('إحداثيات المدينة غير متوفرة');
+        return;
+      }
+      
+      final foundCityName = city['city'] as String? ?? 'Unknown';
+      final countryName = city['country'] as String? ?? 'Unknown';
+      final fullCityName = '$foundCityName, $countryName';
+
+      await _addWeatherCard(lat, lon, fullCityName);
+    } catch (e) {
+      setState(() {
+        _isAddingWeather = false;
+      });
+      _showErrorSnackBar('Error searching for city: $e');
+    }
+  }
+
+  Future<void> _addWeatherCard(double lat, double lon, String cityName) async {
+    try {
+      final weatherData = await CityService.getWeather(lat, lon);
+      
+      // Extract weather information with null safety
+      final main = weatherData['main'] as Map<String, dynamic>?;
+      final weather = weatherData['weather'] as List<dynamic>?;
+      
+      if (main == null || weather == null || weather.isEmpty) {
+        throw Exception('Invalid weather data structure');
+      }
+      
+      final temp = (main['temp'] as num?)?.round() ?? 0;
+      final weatherItem = weather[0] as Map<String, dynamic>;
+      final condition = weatherItem['main'] as String? ?? 'Unknown';
+      final highTemp = (main['temp_max'] as num?)?.round() ?? temp;
+      final lowTemp = (main['temp_min'] as num?)?.round() ?? temp;
+      
+      // Map condition to icon
+      final icon = _getWeatherIcon(condition);
+      
+      // Create weather model
+      final weatherModel = WeatherModel(
+        location: cityName,
+        temperature: temp,
+        condition: condition,
+        highTemp: highTemp,
+        lowTemp: lowTemp,
+        weatherIcon: icon,
+      );
+
+      // Add to list
+      setState(() {
+        weatherCards.insert(0, weatherModel);
+        _isAddingWeather = false;
+        _searchController.clear();
+        _cities = [];
+      });
+    } catch (e) {
+      setState(() {
+        _isAddingWeather = false;
+      });
+      _showErrorSnackBar('Error fetching weather: $e');
+      print('Weather fetch error: $e'); // Debug output
+    }
+  }
+
+  String _getWeatherIcon(String condition) {
+    switch (condition.toLowerCase()) {
+      case 'clear':
+        return 'assets/images/sun.gif';
+      case 'clouds':
+        return 'assets/images/cloudy.gif';
+      case 'rain':
+      case 'drizzle':
+        return 'assets/images/rain2.gif';
+      case 'windy':
+        return 'assets/images/windy.gif';
+      case 'snow':
+        return 'assets/images/snowy.gif';
+      default:
+        return 'assets/images/sun.gif';
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+}
+
