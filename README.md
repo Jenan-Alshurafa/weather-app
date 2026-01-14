@@ -1,6 +1,3 @@
-# weatherapplication
-
-
 # WeatherApp
 
 A simple and clean Weather Application built with Flutter, designed as a learning-focused project to understand API integration, asynchronous data handling, and dynamic UI updates.

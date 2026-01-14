@@ -96,27 +96,6 @@ class _MainWeatherScreenState extends State<MainWeatherScreen> {
                 ),
               ),
               
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Container(
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    color: Colors.white.withOpacity(0.08),
-                  ),
-                  child: TextField(
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Search for a city or airport',
-                      hintStyle: TextStyle(color: Colors.white70),
-                      prefixIcon: Icon(Icons.search, color: Colors.white70),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-              ),
-              
               // Location
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -196,7 +175,7 @@ class _MainWeatherScreenState extends State<MainWeatherScreen> {
 
                       // Day/Week Toggle
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 150),
                         child: GlassmorphismWidget(
                           borderRadius: BorderRadius.circular(30),
                           child: Row(
@@ -224,7 +203,7 @@ class _MainWeatherScreenState extends State<MainWeatherScreen> {
                               width: 90,
                               margin: const EdgeInsets.only(right: 15),
                               child: GlassmorphismWidget(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(50),
                                 opacity: hour.isNow ? 0.3 : 0.2,
                                 borderColor: hour.isNow
                                     ? Colors.purple.withOpacity(0.8)
